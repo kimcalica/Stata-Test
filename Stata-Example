@@ -1,0 +1,79 @@
+cd "/Users/kimcalica/Desktop/Econ281KimCalica/StataProject3"
+log using stataproject3.txt, text replace
+use driving.dta, clear
+*Exercise A
+*1
+graph bar (median) vkt83 vkt93 vkt03, blabel(bar, position(inside)) title("VKT 1983-2003")legend(order(1 "Med VKT ’83" 2 "Med VKT ’93" 3 "Med VKT ’03") cols(3) position(bottom))
+twoway (kdensity aadt83) (kdensity aadt93) (kdensity aadt03), scheme(s1color) legend(order(1 "AADT ’83" 2 "AADT ’93" 3 "AADT ’03") cols(3)) title("AADT 1983-2003")
+*2 Model 1
+generate lnvkt93 =ln(vkt93)
+generate lnlanekm = ln(lanekm93)
+generate lntransit = ln(transit)
+regress lnvkt93 lnlanekm sprawl lntransit
+*Model 2
+generate cooldd2 = cooldd^2
+generate heatdd2 = heatdd^2
+regress lnvkt93 lnlanekm ruggedness_msa cooldd cooldd2 heatdd heatdd2
+*Model 3
+generate hightransit = transit>2
+generate lowtransit = transit<2
+regress lnvkt93 lnlanekm hightransit lowtransit sprawl93
+*3
+regress lnvkt93 lnlanekm ruggedness_msa heatdd heatdd2
+regress lnvkt93 lnlanekm ruggedness_msa cooldd cooldd2 heatdd heatdd2
+*4
+regress lnvkt93 lnlanekm hightransit lowtransit sprawl93
+*5
+regress lnvkt93 lnlanekm ruggedness_msa cooldd cooldd2 heatdd heatdd2
+*6
+regress lnvkt93 lnlanekm sprawl lntransit
+regress lnvkt93 lnlanekm sprawl lntransit div1 div2 div3 div4 div5 div6 div7 div8
+*Exercise B
+use scrap_sm.dta, clear
+*1
+*Model 4
+regress scrap hrsemp sales employ union
+*Model 5
+generate lnsales = ln(sales)
+generate lnemploy = ln(employ)
+regress scrap hrsemp lnsales lnemploy union
+*Model 6
+generate lnscrap = ln(scrap)
+regress lnscrap hrsemp lnsales lnemploy union
+*2
+*Regress y on all x var, except for xk
+regress scrap sales employ union
+generate scrap_hat =  3.630932 - 0.0588462*sales + 0.0486578*employ + 4.115413*union
+generate u_scrap = scrap - scrap_hat
+*Regress xk on all x var except xk
+regress hrsemp sales employ union
+generate hrsemp_hat = 7.460984 + 0.1358527*sales - 0.1132206*employ - 8.207887*union
+generate u_hrsemp = hrsemp - hrsemp_hat
+*Regress uy to ux
+regress u_scrap u_hrsemp
+*3
+generate salesemploy = sales + employ
+regress scrap hrsemp sales salesemploy union
+*4
+regress scrap hrsemp lnsales lnemploy union
+*5
+generate tld_hrsemp = hrsemp - 5
+generate tld_sales = sales - 5
+generate tld_employ = employ - 60
+generate  tld_union = union - 1
+regress scrap tld_hrsemp tld_sales tld_employ tld_union
+*6 
+*Model 4 v Model 5
+regress scrap hrsemp sales employ union
+regress scrap hrsemp lnsales lnemploy union
+*Model 5 v Model 6
+regress lnscrap hrsemp lnsales lnemploy union
+predict hatlnscrap
+generate hatscrap = exp(hatlnscrap)*exp(1.67518461/2)
+corr scrap hatscrap
+display 0.3266 ^2
+regress scrap hrsemp lnsales lnemploy union
+log close
+
+
+
